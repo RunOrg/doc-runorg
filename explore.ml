@@ -28,5 +28,6 @@ let all_md =
 
   recurse "" [] ""
 
-
-
+(** Load [Read.t] for every file. *)
+let all_data = 
+  List.map (fun path -> Read.parse (source_path // path) path) all_md
