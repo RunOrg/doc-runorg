@@ -37,15 +37,23 @@ and bodyP tag args buffer tags = parse
     else ( Buffer.add_string buffer ("</" ^ close ^ ">") ; bodyP tag args buffer tags lexbuf ) }
   | _ as c { Buffer.add_char buffer c ; bodyP tag args buffer tags lexbuf }
   | eof { failwith "Parse error: expected closing tag, found EOF." }
+
 {
+
+  type element = {
+    where : [ `ANY | `API | `JS ] ;
+    what  :
+      (* A piece of markdown *) 
+      [ `MD of string 
+      (* A request or response example. *)
+      | `API of string option * string ] ;
+  }
 
   type t = {
     path   : string ; 
     title  : string ;
     parent : string option ; 
-    body   : [ `API of string 
-	     | `JS  of string
-	     ] list ; 
+    body   : element list ; 
   }
 
   let parse fullpath path = 
@@ -61,15 +69,24 @@ and bodyP tag args buffer tags = parse
       with Not_found -> "", None 
     in
 
+
     let body = List.concat (List.map begin fun tag -> 
       match tag.tag, tag.content with 
 
       | "doc", Some body -> 	
 	
 	let filter = try Map.find "for" tag.args with Not_found -> "all" in
-	if filter = "js" then [ `JS body ] else
-	  if filter = "api" then [ `API body ] else 
-	    [ `JS body ; `API body ]
+	let where  = match filter with 
+	  | "js" -> `JS
+	  | "api" -> `API 
+	  | _ -> `ANY in
+	[ { where ; what = `MD body } ]
+
+      | "example", Some body -> 
+	let title = try Some (Map.find "caption" tag.args) with Not_found -> None in
+	let kind = try Map.find "type" tag.args with Not_found -> "json" in
+	if kind = "api" then [ { where = `API ; what = `API (title, body) } ] else
+	  []
 
       | _ -> []
 
@@ -79,12 +96,13 @@ and bodyP tag args buffer tags = parse
 
   let only what files = 
 
-    let is_content = function `API _ | `JS _ -> true | _ -> false in 
+    let is_content elt = match elt.what with `MD _ | `API _ -> true in 
     let has_content file = List.exists is_content file.body in
 
-    let is_kept = match what with
-      | `JS -> (function `API _ -> false | _ -> true)
-      | `API -> (function `JS _ -> false | _ -> true) in
+    let is_kept elt = match elt.where with 
+      | `ANY -> true 
+      | `JS  -> what = `JS 
+      | `API -> what = `API in
 
     let filter file = { file with body = List.filter is_kept file.body } in
 
