@@ -57,10 +57,14 @@ let write file tree site prefix =
       if String.starts_with s "  " then String.sub s 2 (String.length s - 2) else s) lines in
     String.concat "\n" lines in 
 
+  let caption = function 
+    | None -> ""
+    | Some c -> "<p class=\"caption\">" ^ c ^ "</p>" in
+
   (* Turns an individual block into a string. *)
   let to_string elt = match elt.Read.what with 
     | `MD block -> replace_internal_links (remove_starting_spaces block) 
-    | `API (_,block) -> block
+    | `API (c,block) -> caption c ^ "<pre>" ^ Syntax.api block ^ "</pre>"
   in
 
   (* Generates the Jekyll header for the file. *)
