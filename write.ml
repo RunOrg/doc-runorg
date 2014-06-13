@@ -64,15 +64,42 @@ let write file tree site prefix =
   in
 
   (* Generates the Jekyll header for the file. *)
-  let header file =
+  let header =
     "---\n"
     ^ "title: " ^ file.Read.title ^ "\n"
     ^ "---\n"
   in
 
+  (* Generates the HTML menu for the file. *)
+  let menu =
+    let above = List.rev (Tree.ascendants file tree) in 
+    let below = Tree.children file tree in 
+    "<nav>"
+    ^ (if above <> [] then "<ul class=\"above\"><li>" 
+	^ String.concat "</li><li>" (List.map begin fun node ->  
+	  "<a href=\"" ^ (url_prefix // node.Read.path) ^ "\">" 
+	  ^ node.Read.title ^ "</a>"
+	end above)
+	^ "</li></ul>" 
+      else "")
+    ^ "<span class=\"active\">" 
+    ^ file.Read.title ^ "</span>"
+    ^ (if below <> [] then "<ul class=\"below\"><li>" 
+	^ String.concat "</li><li>" (List.rev_map begin fun node ->  
+	  "<a href=\"" ^ (url_prefix // node.Read.path) ^ "\">" 
+	  ^ node.Read.title ^ "</a>"
+	end below)
+	^ "</li></ul>" 
+      else "")
+  ^ "</nav>"
+  in
+
   let contents = 
-    header file 
+    header  
+    ^ "<div id=\"body\">\n"
     ^ String.concat "\n\n" (List.map to_string file.Read.body) 
+    ^ "\n</div>\n"
+    ^ menu
   in
 
   write_binary (prefix // file.Read.path) contents
