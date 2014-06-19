@@ -140,7 +140,6 @@ and markdownP stack buffer = parse
     in
     
     let in_list = List.fold_left (fun in_list block -> 
-      print_endline ("Block: >>" ^ block ^ "<<") ;
       if block = "" then 
 	in_list
       else if block.[0] = '#' then begin
