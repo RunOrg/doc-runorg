@@ -46,7 +46,9 @@ and bodyP tag args buffer tags = parse
       (* A piece of markdown *) 
       [ `MD of string 
       (* A request or response example. *)
-      | `API of string option * string ] ;
+      | `API of string option * string 
+      (* A JSON example. *)
+      | `JSON of string option * string ] ;
   }
 
   type t = {
@@ -86,7 +88,8 @@ and bodyP tag args buffer tags = parse
 	let title = try Some (Map.find "caption" tag.args) with Not_found -> None in
 	let kind = try Map.find "type" tag.args with Not_found -> "json" in
 	if kind = "api" then [ { where = `API ; what = `API (title, body) } ] else
-	  []
+	  if kind = "json" then [ { where = `ANY ; what = `JSON (title, body) } ] else
+	    []
 
       | _ -> []
 
@@ -96,7 +99,7 @@ and bodyP tag args buffer tags = parse
 
   let only what files = 
 
-    let is_content elt = match elt.what with `MD _ | `API _ -> true in 
+    let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ -> true in 
     let has_content file = List.exists is_content file.body in
 
     let is_kept elt = match elt.where with 
