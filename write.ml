@@ -64,8 +64,9 @@ let write file tree site prefix =
   (* Turns an individual block into a string. *)
   let to_string elt = match elt.Read.what with 
     | `MD block -> replace_internal_links (remove_starting_spaces block) 
-    | `API (c,block) -> caption c ^ "<pre>" ^ Syntax.api block ^ "</pre>"
-    | `JSON (c,block) -> caption c ^ "<pre>" ^ Syntax.json block ^ "</pre>"
+    | `API (c,block) -> caption c ^ "<pre class=\"api\">" ^ Syntax.api block ^ "</pre>"
+    | `JSON (c,block) -> caption c ^ "<pre class=\"json\">" ^ Syntax.json block ^ "</pre>"
+    | `JS (c,block) -> caption c ^ "<pre class=\"js\">" ^ Syntax.js block ^ "</pre>"
   in
 
   (* Generates the Jekyll header for the file. *)

@@ -18,6 +18,12 @@ and jsonP sol buffer = parse
 | _ as c { Buffer.add_char buffer c ; jsonP (c = '\n') buffer lexbuf }
 | eof { () } 
 
+and jsP sol buffer = parse 
+| "  " { if not sol then Buffer.add_string buffer "  " ; jsP false buffer lexbuf }
+| [ ^ '\n' ' ' ] * as s { Buffer.add_string buffer s ; jsP false buffer lexbuf }
+| _ as c { Buffer.add_char buffer c ; jsP (c = '\n') buffer lexbuf }
+| eof { () } 
+
 {
 
   let api block =
@@ -32,5 +38,10 @@ and jsonP sol buffer = parse
     jsonP true buffer lexbuf ;
     Buffer.contents buffer 
 
+  let js block =
+    let lexbuf = Lexing.from_string block in 
+    let buffer = Buffer.create (String.length block) in
+    jsP true buffer lexbuf ;
+    Buffer.contents buffer 
 
 } 

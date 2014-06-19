@@ -48,7 +48,9 @@ and bodyP tag args buffer tags = parse
       (* A request or response example. *)
       | `API of string option * string 
       (* A JSON example. *)
-      | `JSON of string option * string ] ;
+      | `JSON of string option * string
+      (* A JS example *)
+      | `JS of string option * string ] ;
   }
 
   type t = {
@@ -89,7 +91,8 @@ and bodyP tag args buffer tags = parse
 	let kind = try Map.find "type" tag.args with Not_found -> "json" in
 	if kind = "api" then [ { where = `API ; what = `API (title, body) } ] else
 	  if kind = "json" then [ { where = `ANY ; what = `JSON (title, body) } ] else
-	    []
+	    if kind = "js" then [ { where = `JS ; what = `JS (title, body) } ] else
+	      []
 
       | _ -> []
 
@@ -99,7 +102,7 @@ and bodyP tag args buffer tags = parse
 
   let only what files = 
 
-    let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ -> true in 
+    let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ | `JS _ -> true in 
     let has_content file = List.exists is_content file.body in
 
     let is_kept elt = match elt.where with 
