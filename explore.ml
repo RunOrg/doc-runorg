@@ -13,12 +13,12 @@ let source_path =
     exit (-1)) ;
   Sys.argv.(1)
 
-(** Create a list of all *.md files inside the source directory. Recurses
+(** Create a list of all *.htm files inside the source directory. Recurses
     into sub-directories. All paths are relative to the source path. *)
-let all_md = 
+let all_htm = 
   let rec recurse path acc file = 
     let file_path = path // file in 
-    if String.ends_with file ".md" then file_path :: acc else
+    if String.ends_with file ".htm" then file_path :: acc else
       let full_path = source_path // file_path in
       if Sys.is_directory full_path then 
 	Array.fold_left (recurse file_path) acc (Sys.readdir full_path) 
@@ -30,4 +30,4 @@ let all_md =
 
 (** Load [Read.t] for every file. *)
 let all_data = 
-  List.map (fun path -> Read.parse (source_path // path) path) all_md
+  List.map (fun path -> Read.parse (source_path // path) path) all_htm
