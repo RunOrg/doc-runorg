@@ -50,13 +50,6 @@ let write file files tree site prefix =
   let replace_internal_links block = 
     String.concat url_prefix_repl (String.nsplit block "](/") in
 
-  (* Removes the initial '  ' from the beginning of each line in the block. *)
-  let remove_starting_spaces block = 
-    let lines = String.nsplit block "\n" in 
-    let lines = List.map (fun s -> 
-      if String.starts_with s "  " then String.sub s 2 (String.length s - 2) else s) lines in
-    String.concat "\n" lines in 
-
   (* Show a list of files, rendered as a table. *)
   let show_file_list = function [] -> "" | list ->
     "<table class=\"files\"><tr>"
@@ -77,7 +70,7 @@ let write file files tree site prefix =
 
   (* Turns an individual block into a string. *)
   let to_string elt = match elt.Read.what with 
-    | `MD block -> replace_internal_links (remove_starting_spaces block) 
+    | `MD block -> Syntax.markdown (replace_internal_links block) 
     | `API (c,block) -> caption c ^ "<pre class=\"api\">" ^ Syntax.api block ^ "</pre>"
     | `JSON (c,block) -> caption c ^ "<pre class=\"json\">" ^ Syntax.json block ^ "</pre>"
     | `JS (c,block) -> caption c ^ "<pre class=\"js\">" ^ Syntax.js block ^ "</pre>"
