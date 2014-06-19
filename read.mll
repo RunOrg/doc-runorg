@@ -50,7 +50,9 @@ and bodyP tag args buffer tags = parse
       (* A JSON example. *)
       | `JSON of string option * string
       (* A JS example *)
-      | `JS of string option * string ] ;
+      | `JS of string option * string 
+      (* A list of pages, filtered by tags *)
+      | `LIST of string list ] ;
   }
 
   (** An individual source file. *)
@@ -119,6 +121,17 @@ and bodyP tag args buffer tags = parse
 	    if kind = "js" then [ { where = `JS ; what = `JS (title, body) } ] else
 	      []
 
+      | "list", None -> 	
+	
+	let filter = try Map.find "for" tag.args with Not_found -> "all" in
+	let where  = match filter with 
+	  | "js" -> `JS
+	  | "api" -> `API 
+	  | _ -> `ANY in
+	let tags = BatString.nsplit (try Map.find "tags" tag.args with Not_found -> "") " " in
+	if tags = [] then [] else 
+	  [ { where ; what = `LIST tags } ]
+
       | _ -> []
 
     end elements) in
@@ -144,7 +157,7 @@ and bodyP tag args buffer tags = parse
 
   let only what files = 
 
-    let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ | `JS _ -> true in 
+    let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ | `JS _ | `LIST _ -> true in 
     let has_content file = List.exists is_content file.body in
 
     let is_kept elt = match elt.where with 

@@ -39,7 +39,7 @@ let write_binary path contents =
     as [api]. Typical URL transformation is that path [{source_path}/people.md] 
     becomes path [{target_path}/api/people.md] and URL [/people.md] becomes
     URL [/docs/api/people.md]. *)
-let write file tree site prefix = 
+let write file files tree site prefix = 
   
   (* The full URL prefix. *)
   let url_prefix = site // prefix in
@@ -57,6 +57,20 @@ let write file tree site prefix =
       if String.starts_with s "  " then String.sub s 2 (String.length s - 2) else s) lines in
     String.concat "\n" lines in 
 
+  (* Show a list of files, rendered as a table. *)
+  let show_file_list = function [] -> "" | list ->
+    "<table class=\"files\"><tr>"
+    ^ String.concat "</tr><tr>" (List.map begin fun file ->
+      "<td>" 
+      ^ (match file.Read.subtitle with None -> "" | Some s -> "\n`"^s^"`\n")
+      ^ "</td><td><a href=\""
+      ^ (url_prefix // file.Read.path)
+      ^ "\">"
+      ^ file.Read.title
+      ^ "</a></td>"
+    end list) 
+    ^ "</tr></table>"
+  in
   let caption = function 
     | None -> ""
     | Some c -> "<p class=\"caption\">" ^ c ^ "</p>" in
@@ -67,6 +81,7 @@ let write file tree site prefix =
     | `API (c,block) -> caption c ^ "<pre class=\"api\">" ^ Syntax.api block ^ "</pre>"
     | `JSON (c,block) -> caption c ^ "<pre class=\"json\">" ^ Syntax.json block ^ "</pre>"
     | `JS (c,block) -> caption c ^ "<pre class=\"js\">" ^ Syntax.js block ^ "</pre>"
+    | `LIST tags -> show_file_list (Read.with_tags tags files) 
   in
 
   (* Generates the Jekyll header for the file. *)
@@ -113,4 +128,4 @@ let write file tree site prefix =
 (** Write a group of files with the same prefix. *)
 let write_all files site prefix = 
   let tree = Tree.make files in 
-  List.iter (fun file -> write file tree site prefix) files
+  List.iter (fun file -> write file files tree site prefix) files
