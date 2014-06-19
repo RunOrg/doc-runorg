@@ -160,35 +160,35 @@ and markdownP stack buffer = parse
 
 	Buffer.add_string buffer "</h" ; 
 	Buffer.add_string buffer nlevel ;
-	Buffer.add_char buffer '>' ;
+	Buffer.add_string buffer ">\n" ;
 
 	false
 
       end else if block.[0] = '-' then begin
 	
-	Buffer.add_string buffer (if in_list then "<li>" else "<ul><li>") ; 
+	Buffer.add_string buffer (if in_list then "  <li>" else "<ul>\n  <li>") ; 
 	
 	parse_block (BatString.lchop block) ;
 
-	Buffer.add_string buffer "</li>" ;
+	Buffer.add_string buffer "</li>\n" ;
 
 	true 
 
       end else begin
 
-	if in_list then Buffer.add_string buffer "</ul>" ;
+	if in_list then Buffer.add_string buffer "</ul>\n" ;
 	Buffer.add_string buffer "<p>" ;
 	
 	parse_block block ;
 
-	Buffer.add_string buffer "</p>" ;
+	Buffer.add_string buffer "</p>\n" ;
 
 	false 
 
       end) false blocks 
     in
 
-    if in_list then Buffer.add_string buffer "</ul>" ;
+    if in_list then Buffer.add_string buffer "</ul>\n" ;
 
     Buffer.contents buffer 
 } 

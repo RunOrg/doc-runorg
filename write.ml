@@ -55,7 +55,7 @@ let write file files tree site prefix =
     "<table class=\"files\"><tr>"
     ^ String.concat "</tr><tr>" (List.map begin fun file ->
       "<td>" 
-      ^ (match file.Read.subtitle with None -> "" | Some s -> "\n`"^s^"`\n")
+      ^ (match file.Read.subtitle with None -> "" | Some s -> "<code><![CDATA["^s^"]]></code>")
       ^ "</td><td><a href=\""
       ^ (url_prefix // file.Read.path)
       ^ "\">"
