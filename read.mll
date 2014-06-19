@@ -125,6 +125,23 @@ and bodyP tag args buffer tags = parse
     
     { path ; title ; js ; api ; parent ; body ; tags ; subtitle = None }
 
+  (** Returns all files with one of the provided tags. Each matching file appears exactly
+      once. Files are returned in the order of the first matched tag in the tag list, files
+      with the same first matched tag are sorted in the same order as [files]. *) 
+  let with_tags tags files = 
+
+    let not_seen_with_tag acc seen tag files = 
+      List.fold_left (fun (seen,acc) file -> 
+	if BatSet.mem file.path seen then seen, acc else 
+	  if List.mem tag file.tags then BatSet.add file.path seen, file :: acc else seen, acc) 
+	(seen,acc) files in
+
+    let _, acc = 
+      List.fold_left (fun (seen,acc) tag -> not_seen_with_tag acc seen tag files) 
+	(BatSet.empty, []) tags in
+    
+    List.rev acc
+
   let only what files = 
 
     let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ | `JS _ -> true in 
