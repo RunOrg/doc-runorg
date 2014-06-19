@@ -53,26 +53,51 @@ and bodyP tag args buffer tags = parse
       | `JS of string option * string ] ;
   }
 
+  (** An individual source file. *)
   type t = {
+
+    (** The path of the source file. 
+       Will be mirrored for the output file. *)
     path   : string ; 
+
+    (** The title of the page (language-independent). *)
     title  : string ;
+
+    (** The subtitle. [None] by default, but set to either [js] or
+	[api] when in the corresponding section. *)
+    subtitle : string option ; 
+
+    (** The subtitle, in the JS section. *)
+    js     : string option ;
+
+    (** The subtitle, in the API section. *)
+    api    : string option ;
+
+    (** Tags associated to the page. *)
+    tags   : string list ;
+
+    (** The parent page in the hierarchy. *)
     parent : string option ; 
+
+    (** The rendered elements. *)
     body   : element list ; 
   }
 
   let parse fullpath path = 
-    let channel = open_in fullpath in 
-    let lexbuf  = Lexing.from_channel channel in 
-    let tags    = try tagP [] lexbuf with Failure s -> failwith ("In file " ^ path ^ ":\n" ^ s) in
+    let channel  = open_in fullpath in 
+    let lexbuf   = Lexing.from_channel channel in 
+    let elements = try tagP [] lexbuf with Failure s -> failwith ("In file " ^ path ^ ":\n" ^ s) in
 
-    let title, parent = 
-      try let tag = List.find (fun t -> t.tag = "page") tags in 
+    let title, parent, tags, js, api = 
+      try let tag = List.find (fun t -> t.tag = "page") elements in 
 	  let title = try Map.find "title" tag.args with Not_found -> "" in
 	  let parent = try Some (Map.find "parent" tag.args) with Not_found -> None in 
-	  title, parent
-      with Not_found -> "", None 
+	  let tags = BatString.nsplit (try Map.find "tags" tag.args with Not_found -> "") " " in
+	  let js = try Some (Map.find "js" tag.args) with Not_found -> None in 
+	  let api = try Some (Map.find "api" tag.args) with Not_found -> None in 
+	  title, parent, tags, js, api
+      with Not_found -> "", None, [], None, None 
     in
-
 
     let body = List.concat (List.map begin fun tag -> 
       match tag.tag, tag.content with 
@@ -96,9 +121,9 @@ and bodyP tag args buffer tags = parse
 
       | _ -> []
 
-    end tags) in
+    end elements) in
     
-    { path ; title ; parent ; body }
+    { path ; title ; js ; api ; parent ; body ; tags ; subtitle = None }
 
   let only what files = 
 
@@ -110,7 +135,11 @@ and bodyP tag args buffer tags = parse
       | `JS  -> what = `JS 
       | `API -> what = `API in
 
-    let filter file = { file with body = List.filter is_kept file.body } in
+    let filter file = { 
+      file with 
+	subtitle = (match what with `JS -> file.js | `API -> file.api) ;
+	body = List.filter is_kept file.body 
+    } in
 
     List.filter has_content (List.map filter files) 
 
