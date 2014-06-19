@@ -50,12 +50,15 @@ let write file files tree site prefix =
   let replace_internal_links block = 
     String.concat url_prefix_repl (String.nsplit block "](/") in
 
+  let escape block = 
+    String.concat "&lt;" (String.nsplit block "<") in
+
   (* Show a list of files, rendered as a table. *)
   let show_file_list = function [] -> "" | list ->
     "<table class=\"files\"><tr>"
     ^ String.concat "</tr><tr>" (List.map begin fun file ->
       "<td>" 
-      ^ (match file.Read.subtitle with None -> "" | Some s -> "<code><![CDATA["^s^"]]></code>")
+      ^ (match file.Read.subtitle with None -> "" | Some s -> "<code>"^escape s^"</code>")
       ^ "</td><td><a href=\""
       ^ (url_prefix // file.Read.path)
       ^ "\">"
@@ -80,6 +83,7 @@ let write file files tree site prefix =
   (* Generates the Jekyll header for the file. *)
   let header =
     "---\n"
+    ^ "layout: docs-" ^ prefix ^ "\n"
     ^ "title: " ^ file.Read.title ^ "\n"
     ^ "---\n"
   in
