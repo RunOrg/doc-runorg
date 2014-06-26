@@ -74,7 +74,7 @@ let write file files tree site prefix =
     ^ String.concat "</tr><tr>" (List.map begin fun (name, typ, desc) ->
       "<td class=\"code\"><code>"^escape name^"</code></td>"
       ^ "<td class=\"code\"><code>"^escape typ^"</code></td>"
-      ^ "<td>"^escape desc^"</td>"
+      ^ "<td>"^Syntax.markdown (replace_internal_links desc)^"</td>"
     end list) 
     ^ "</tr></table>"
   in
@@ -128,6 +128,9 @@ let write file files tree site prefix =
   let contents = 
     header  
     ^ "<div id=\"body\">\n"
+    ^ (match file.Read.subtitle with 
+      | None     -> "" 
+      | Some sub -> "<pre class=\"subtitle\">" ^ escape sub ^ "</pre>")
     ^ String.concat "\n\n" (List.map to_string file.Read.body) 
     ^ "\n</div>\n"
     ^ menu
