@@ -45,6 +45,8 @@ and bodyP tag args buffer tags = parse
     what  :
       (* A piece of markdown *) 
       [ `MD of string 
+      (* A (name, type, description) list of fields. *)
+      | `FIELDS of (string * string * string) list 
       (* A request or response example. *)
       | `API of string option * string 
       (* A JSON example. *)
@@ -84,6 +86,17 @@ and bodyP tag args buffer tags = parse
     (** The rendered elements. *)
     body   : element list ; 
   }
+
+  (** Parse the contents of a "fields" block. *)
+  let parse_fields block = 
+    let lines = BatString.nsplit block "\n" in
+    let lines = List.map (fun line -> List.map BatString.trim (BatString.nsplit line "|")) lines in 
+    let rev = List.fold_left (fun acc line ->
+      match line with 
+      | [ name ; typ ; desc ] -> ( name, typ, desc ) :: acc
+      | [ desc ] -> (match acc with [] -> [] | (n, t, d) :: tail -> (n, t, d ^ " " ^ desc) ::tail)
+      | _ -> acc) [] lines in
+    List.rev rev 
 
   let parse fullpath path = 
     let channel  = open_in fullpath in 
@@ -132,6 +145,15 @@ and bodyP tag args buffer tags = parse
 	if tags = [] then [] else 
 	  [ { where ; what = `LIST tags } ]
 
+      | "fields", Some body -> 
+	
+	let filter = try Map.find "for" tag.args with Not_found -> "all" in
+	let where  = match filter with 
+	  | "js" -> `JS
+	  | "api" -> `API 
+	  | _ -> `ANY in
+	[ { where ; what = `FIELDS (parse_fields body) } ]
+
       | _ -> []
 
     end elements) in
@@ -157,7 +179,9 @@ and bodyP tag args buffer tags = parse
 
   let only what files = 
 
-    let is_content elt = match elt.what with `MD _ | `API _ | `JSON _ | `JS _ | `LIST _ -> true in 
+    let is_content elt = match elt.what with 
+      | `MD _ | `API _ | `JSON _ | `JS _ | `LIST _ | `FIELDS _ -> true in 
+
     let has_content file = List.exists is_content file.body in
 
     let is_kept elt = match elt.where with 

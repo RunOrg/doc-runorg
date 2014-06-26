@@ -67,6 +67,18 @@ let write file files tree site prefix =
     end list) 
     ^ "</tr></table>"
   in
+
+  (* Show a list of fields, rendered as a table *)
+  let show_field_list = function [] -> "" | list ->
+    "<table class=\"fields\"><tr>"
+    ^ String.concat "</tr><tr>" (List.map begin fun (name, typ, desc) ->
+      "<td><code>"^escape name^"</code></td>"
+      ^ "<td><code>"^escape typ^"</code></td>"
+      ^ "<td>"^escape desc^"</td>"
+    end list) 
+    ^ "</tr></table>"
+  in
+
   let caption = function 
     | None -> ""
     | Some c -> "<p class=\"caption\">" ^ c ^ "</p>" in
@@ -78,6 +90,7 @@ let write file files tree site prefix =
     | `JSON (c,block) -> caption c ^ "<pre class=\"json\">" ^ Syntax.json block ^ "</pre>"
     | `JS (c,block) -> caption c ^ "<pre class=\"js\">" ^ Syntax.js block ^ "</pre>"
     | `LIST tags -> show_file_list (Read.with_tags tags files) 
+    | `FIELDS fields -> show_field_list fields
   in
 
   (* Generates the Jekyll header for the file. *)
