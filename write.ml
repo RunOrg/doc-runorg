@@ -57,7 +57,7 @@ let write file files tree site prefix =
   let show_file_list = function [] -> "" | list ->
     "<table class=\"files\"><tr>"
     ^ String.concat "</tr><tr>" (List.map begin fun file ->
-      "<td>" 
+      "<td class=\"code\">" 
       ^ (match file.Read.subtitle with None -> "" | Some s -> "<code>"^escape s^"</code>")
       ^ "</td><td><a href=\""
       ^ (url_prefix // file.Read.path)
@@ -72,8 +72,8 @@ let write file files tree site prefix =
   let show_field_list = function [] -> "" | list ->
     "<table class=\"fields\"><tr>"
     ^ String.concat "</tr><tr>" (List.map begin fun (name, typ, desc) ->
-      "<td><code>"^escape name^"</code></td>"
-      ^ "<td><code>"^escape typ^"</code></td>"
+      "<td class=\"code\"><code>"^escape name^"</code></td>"
+      ^ "<td class=\"code\"><code>"^escape typ^"</code></td>"
       ^ "<td>"^escape desc^"</td>"
     end list) 
     ^ "</tr></table>"
